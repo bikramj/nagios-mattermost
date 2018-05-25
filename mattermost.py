@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 # Copyright (c) 2015 NDrive SA
 #
@@ -24,7 +24,7 @@ import argparse
 import json
 import urllib2
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 
 def parse():
@@ -34,7 +34,7 @@ def parse():
     parser.add_argument('--username', help='Username to notify as',
                         default='Nagios')
     parser.add_argument('--iconurl', help='URL of icon to use for username',
-                        default='https://slack.global.ssl.fastly.net/7bf4/img/services/nagios_128.png') # noqa
+                        default='https://slack.global.ssl.fastly.net/7bf4/img/services/nagios_128.png')  # noqa
     parser.add_argument('--notificationtype', help='Notification Type',
                         required=True)
     parser.add_argument('--hostalias', help='Host Alias', required=True)
@@ -57,43 +57,62 @@ def encode_special_characters(text):
     return text
 
 
-def emoji(notificationtype):
+def getcolor(state):
     return {
-        "RECOVERY": ":white_check_mark:",
-        "PROBLEM": ":fire:",
-        "DOWNTIMESTART": ":clock10:",
-        "DOWNTIMEEND": ":sunny:"
-    }.get(notificationtype, "")
-
-
-def text(args):
-    template_host = "__{notificationtype}__ {hostalias} is {hoststate}\n{hostoutput}" # noqa
-    template_service = "__{notificationtype}__ {hostalias} at {hostaddress}/{servicedesc} is {servicestate}\n{serviceoutput}" # noqa
-    if args.hoststate is not None:
-        template_cgiurl = " [View :link:]({cgiurl}?type=1&host={hostalias})"
-    elif args.servicestate is not None:
-        template_cgiurl = " [View :link:]({cgiurl}?type=2&host={hostalias}&service={servicedesc})"
-    template = template_service if args.servicestate else template_host
-
-    text = emoji(args.notificationtype) + template.format(**vars(args))
-    if args.cgiurl is not None:
-        # If we know the CGI url provide a clickable link to the nagios CGI
-        text = text + template_cgiurl.format(**vars(args))
-
-    return encode_special_characters(text)
+        "RECOVERY": "good",
+        "WARNING": "",
+        "PROBLEM": "danger",
+        "ACKNOWLEDGEMENT": "bad",
+    }.get(state, "")
 
 
 def payload(args):
+    template_service = [
+        {
+            "fallback": "{} in {} at {}".format(args.notificationtype, args.hostalias, args.servicedesc),
+            "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
+            "title_link": encode_special_characters(
+                "{}?type=2&host={}&service={}".format(args.cgiurl, args.hostalias, args.servicedesc)),
+            "color": getcolor(args.notificationtype),
+            "fields": [
+                {
+                    "title": args.servicedesc + " is " + args.servicestate,
+                    "short": False,
+                    "value": args.serviceoutput
+                }
+            ],
+        }
+    ]
+
+    template_host = [
+        {
+            "fallback": "{} in {} is {}".format(args.notificationtype, args.hostalias, args.hoststate),
+            "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
+            "title_link": encode_special_characters("{}?type=2&host={}".format(args.cgiurl, args.hostalias)),
+            "color": getcolor(args.notificationtype),
+            "fields": [
+                {
+                    "title": "Host {}".format(args.hoststate),
+                    "short": False,
+                    "value": args.hostoutput
+                }
+            ],
+        }
+    ]
+
+    attachment = template_service if args.servicestate else template_host
+
     payload = {
         "username": args.username,
         "icon_url": args.iconurl,
-        "text": text(args)
+        "attachments": attachment
     }
 
     if args.channel:
         payload["channel"] = args.channel
 
-    data = "payload=" + json.dumps(payload)
+    data = "payload= " + json.dumps(payload)
+    print data
     return data
 
 
