@@ -101,7 +101,6 @@ def payload(args):
     ]
 
     attachment = template_service if args.servicestate else template_host
-
     payload = {
         "username": args.username,
         "icon_url": args.iconurl,
@@ -112,7 +111,6 @@ def payload(args):
         payload["channel"] = args.channel
 
     data = "payload= " + json.dumps(payload)
-    print data
     return data
 
 
