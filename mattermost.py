@@ -71,8 +71,7 @@ def payload(args):
         {
             "fallback": "{} in {} at {}".format(args.notificationtype, args.hostalias, args.servicedesc),
             "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
-            "title_link": encode_special_characters(
-                "{}?type=2&host={}&service={}".format(args.cgiurl, args.hostalias, args.servicedesc)),
+            "title_link": "{}?type=2&host={}&service={}".format(args.cgiurl, args.hostalias, args.servicedesc),
             "color": getcolor(args.notificationtype),
             "fields": [
                 {
@@ -88,7 +87,7 @@ def payload(args):
         {
             "fallback": "{} in {} is {}".format(args.notificationtype, args.hostalias, args.hoststate),
             "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
-            "title_link": encode_special_characters("{}?type=2&host={}".format(args.cgiurl, args.hostalias)),
+            "title_link": "{}?type=2&host={}".format(args.cgiurl, args.hostalias),
             "color": getcolor(args.notificationtype),
             "fields": [
                 {
@@ -111,7 +110,7 @@ def payload(args):
         payload["channel"] = args.channel
 
     data = "payload= " + json.dumps(payload)
-    return data
+    return encode_special_characters(data)
 
 
 def request(url, data):
