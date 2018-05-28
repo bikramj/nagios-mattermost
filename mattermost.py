@@ -57,26 +57,29 @@ def encode_special_characters(text):
     return text
 
 
-def getcolor(state):
-    return {
-        "RECOVERY": "good",
-        "WARNING": "",
-        "PROBLEM": "danger",
-        "ACKNOWLEDGEMENT": "bad",
-    }.get(state, "")
+def getcolor(type, state):
+    color = ''
+    if type == "RECOVERY":
+        color = "good"
+    elif type == "ACKNOWLEDGEMENT":
+        color = "#3366ff"
+    elif type == "PROBLEM" and state == "WARNING":
+        color = "#FF8000"
+    elif type == "PROBLEM":
+        color = "danger"
+    return color
 
 
 def payload(args):
     nagios_link = ''
     acknowledge_link = ''
-
     if args.hoststate is not None:
         nagios_link = "{}extinfo.cgi?type=2&host={}".format(args.cgiurl, args.hostalias)
         if args.notificationtype == "PROBLEM":
-            acknowledge_link = "{}cmd.cgi?cmd_typ=34&host={}".format(args.cgiurl, args.hostalias)
+            acknowledge_link = "[(Acknowledge)]({}cmd.cgi?cmd_typ=34&host={})".format(args.cgiurl, args.hostalias)
     elif args.servicestate is not None:
-        nagios_link = "[(Acknowledge)]({}extinfo.cgi?type=2&host={}&service={})".format(args.cgiurl, args.hostalias,
-                                                                                        args.servicedesc)
+        nagios_link = "{}extinfo.cgi?type=2&host={}&service={}".format(args.cgiurl, args.hostalias,
+                                                                       args.servicedesc)
         if args.notificationtype == "PROBLEM":
             acknowledge_link = "[(Acknowledge)]({}cmd.cgi?cmd_typ=34&host={}&service={})".format(args.cgiurl,
                                                                                                  args.hostalias,
@@ -86,7 +89,7 @@ def payload(args):
             "fallback": "{} in {} at {}".format(args.notificationtype, args.hostalias, args.servicedesc),
             "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
             "title_link": nagios_link,
-            "color": getcolor(args.notificationtype),
+            "color": getcolor(args.notificationtype, args.servicestate),
             "fields": [
                 {
                     "title": args.servicedesc + " is " + args.servicestate,
@@ -102,7 +105,7 @@ def payload(args):
             "fallback": "{} in {} is {}".format(args.notificationtype, args.hostalias, args.hoststate),
             "title": "{} -> {} at {}".format(args.notificationtype, args.hostalias, args.hostaddress),
             "title_link": nagios_link,
-            "color": getcolor(args.notificationtype),
+            "color": getcolor(args.notificationtype, args.servicestate),
             "fields": [
                 {
                     "title": "Host {}".format(args.hoststate),
