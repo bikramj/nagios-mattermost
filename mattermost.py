@@ -22,9 +22,10 @@
 
 import argparse
 import json
-import urllib2
+import urllib.parse
+import urllib.request
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 
 def parse():
@@ -130,13 +131,14 @@ def payload(args):
     return encode_special_characters(data)
 
 
-def request(url, data):
-    req = urllib2.Request(url, data)
-    response = urllib2.urlopen(req)
-    return response.read()
-
+def request(url, values):
+    print(values)
+    data = values.encode('ascii') # data should be bytes
+    req = urllib.request.Request(url, data)
+    with urllib.request.urlopen(req) as response:
+        return response.read()
 
 if __name__ == "__main__":
     args = parse()
     response = request(args.url, payload(args))
-    print response
+    print(response)
