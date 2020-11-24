@@ -93,7 +93,7 @@ def payload(args):
             "color": getcolor(args.notificationtype, args.servicestate),
             "fields": [
                 {
-                    "title": args.servicedesc + " is " + args.servicestate,
+                    "title": str(args.servicedesc) + " is " + str(args.servicestate),
                     "short": False,
                     "value": str(args.serviceoutput) + " " + acknowledge_link
                 }
